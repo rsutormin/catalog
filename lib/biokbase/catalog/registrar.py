@@ -72,7 +72,8 @@ class Registrar:
             # 3 docker build - in progress
             # perhaps make this a self attr?
             dockerclient = DockerClient(base_url = str(self.docker_base_url))
-            image_name = self.docker_registry_host + '/' + parsed_url.path[1:].lower() + ':' + str(git_commit_hash)
+            #image_name = self.docker_registry_host + '/' + parsed_url.path[1:].lower() + ':' + str(git_commit_hash)
+            image_name = self.docker_registry_host + '/' + kb_yaml['module-name'].lower()
             # look for docker image
             # this tosses cookies if image doesn't exist, so wrap in try, and build if try reports "not found"
             #self.log(str(dockerclient.inspect_image(repo_name)))
