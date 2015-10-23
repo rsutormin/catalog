@@ -1,5 +1,6 @@
 {
     "module_name" : "release_history",
+    "module_name_lc" : "release_history",
     "git_url" : "https://github.com/kbaseIncubator/release_history",
 
     "info" : {
@@ -12,7 +13,7 @@
             "kb_username" : "rsutormin"
         },
         {
-            "kb_username" : "wstester1"
+            "kb_username" : "wstester2"
         }
     ],
 

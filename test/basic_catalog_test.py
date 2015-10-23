@@ -14,7 +14,7 @@ class BasicCatalogTest(unittest.TestCase):
 
 
     def test_version(self):
-        self.assertEqual(self.catalog.version(self.cUtil.anonymous_ctx()),['0.0.2'])
+        self.assertEqual(self.catalog.version(self.cUtil.anonymous_ctx()),['0.0.3'])
 
 
     def test_is_registered(self):
@@ -129,6 +129,39 @@ class BasicCatalogTest(unittest.TestCase):
             ",".join(sorted(['inactive_module','denied_release','pending_first_release','registration_error',
                 'registration_in_progress']))
             )
+
+        # check for owner search
+        shortlist = self.catalog.list_basic_module_info(self.cUtil.anonymous_ctx(),
+            {'owners':['kbasetest'],'include_unreleased':0})[0]
+        module_names = []
+        for m in shortlist:
+            module_names.append(m['module_name'])
+        pprint(module_names)
+        self.assertEqual(
+            ",".join(sorted(module_names)),
+            ",".join([])
+            )
+        shortlist = self.catalog.list_basic_module_info(self.cUtil.anonymous_ctx(),
+            {'owners':['kbasetest'],'include_unreleased':1})[0]
+        module_names = []
+        for m in shortlist:
+            module_names.append(m['module_name'])
+        pprint(module_names)
+        self.assertEqual(
+            ",".join(sorted(module_names)),
+            ",".join(['pending_first_release'])
+            )
+        shortlist = self.catalog.list_basic_module_info(self.cUtil.anonymous_ctx(),
+            {'owners':['kbasetest', 'wstester1'],'include_unreleased':1})[0]
+        module_names = []
+        for m in shortlist:
+            module_names.append(m['module_name'])
+        pprint(module_names)
+        self.assertEqual(
+            ",".join(sorted(module_names)),
+            ",".join(['denied_release','onerepotest','pending_first_release','pending_second_release','registration_error','registration_in_progress'])
+            )
+
 
     def test_get_module_state(self):
         state = self.catalog.get_module_state(self.cUtil.anonymous_ctx(),

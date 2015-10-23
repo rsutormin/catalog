@@ -22,6 +22,7 @@ from pymongo import MongoClient
 Module Document:
     {
         module_name: str, (unique index)
+        module_name_lc: str, (unique index, lower case module name)
         git_url: str, (unique index)
 
         owners: [
@@ -69,6 +70,7 @@ class MongoCatalogDBI:
     # Collection Names
 
     _MODULES='modules'
+    _DEVELOPERS='developers'
 
     def __init__(self, mongo_host, mongo_db, mongo_user, mongo_psswd):
 
@@ -82,10 +84,17 @@ class MongoCatalogDBI:
         # Grab a handle to the database and collections
         self.db = self.mongo[mongo_db]
         self.modules = self.db[MongoCatalogDBI._MODULES]
+        self.developers = self.db[MongoCatalogDBI._DEVELOPERS]
 
         # Make sure we have an index on module and git_repo_url
-        self.modules.create_index('module_name', unique=True, sparse=True)
-        self.modules.create_index('git_url', unique=True)
+        self.modules.ensure_index('module_name', unique=True, sparse=True)
+        self.modules.ensure_index('module_name_lc', unique=True, sparse=True)
+        self.modules.ensure_index('git_url', unique=True)
+
+        # other indecies for query performance
+        self.modules.ensure_index('owners.kb_username')
+
+        self.developers.ensure_index('kb_username', unique=True)
 
 
 
@@ -94,6 +103,14 @@ class MongoCatalogDBI:
             return False
         query = self._get_mongo_query(module_name=module_name, git_url=git_url)
         module = self.modules.find_one(query, fields=['_id'])
+        if module is not None:
+            return True
+        return False
+
+    def module_name_lc_exists(self,module_name_lc=''):
+        if not module_name_lc:
+            return False
+        module = self.modules.find_one({'module_name_lc':module_name_lc.lower()}, fields=['_id'])
         if module is not None:
             return True
         return False
@@ -109,6 +126,7 @@ class MongoCatalogDBI:
             'owners':[{'kb_username':username}],
             'state': {
                 'active': True,
+                'released': False,
                 'release_approval': 'not_requested',
                 'registration': 'building'
             },
@@ -183,7 +201,7 @@ class MongoCatalogDBI:
         if not module_name:
             raise ValueError('module_name must be defined to set a module name')
         query = self._get_mongo_query(git_url=git_url)
-        result = self.modules.update(query, {'$set':{'module_name':module_name}})
+        result = self.modules.update(query, {'$set':{'module_name':module_name,'module_name_lc':module_name.lower()}})
         return self._check_update_result(result)
 
 
@@ -206,7 +224,11 @@ class MongoCatalogDBI:
         result = self.modules.update(query, {'$set':{'owners':owners}})
         return self._check_update_result(result)
 
-
+    # active = True | False
+    def set_module_active_state(self, active, module_name='', git_url=''):
+        query = self._get_mongo_query(git_url=git_url, module_name=module_name)
+        result = self.modules.update(query, {'$set':{'state.active':active}})
+        return self._check_update_result(result)
 
 
     #### GET methods
@@ -239,14 +261,43 @@ class MongoCatalogDBI:
         return list(self.modules.find(query,{'module_name':1,'git_url':1,'current_versions':1,'owners':1,'_id':0}))
 
 
+    #### developer check methods
+
+    def approve_developer(self, developer):
+        # if the developer is already on the list, just return
+        if self.is_approved_developer([developer])[0]:
+            return
+        self.developers.insert({'kb_username':developer})
+
+    def revoke_developer(self, developer):
+        # if the developer is not on the list, throw an error (maybe a typo, so let's catch it)
+        if not self.is_approved_developer([developer])[0]:
+            raise ValueError('Cannot revoke "'+developer+'", that developer was not found.')
+        self.developers.remove({'kb_username':developer})
+
+    def is_approved_developer(self, usernames):
+        #TODO: optimize, but I expect the list of usernames will be fairly small, so we can loop.  Regardless, in
+        # old mongo (2.x) I think this is even faster in most cases than using $in within a very large list
+        is_approved = []
+        for u in usernames:
+            count = self.developers.find({'kb_username':u}).count()
+            if count>0:
+                is_approved.append(True)
+            else:
+                is_approved.append(False)
+        return is_approved
+
+
+    def list_approved_developers(self):
+        return list(self.developers.find({},{'kb_username':1, '_id':0}))
 
     #### utility methods
     def _get_mongo_query(self, module_name='', git_url=''):
         query={}
         if module_name:
-            query['module_name'] = module_name
+            query['module_name'] = module_name.strip()
         if git_url:
-            query['git_url'] = git_url
+            query['git_url'] = git_url.strip()
         return query
 
     def _check_update_result(self, result):
@@ -258,9 +309,6 @@ class MongoCatalogDBI:
                 nModified = result['n']
             if 'nMatched' in result:
                 nModified = result['nMatched']
-            # not a correct check, because if nothing changed that this will be zero
-            #if 'nModified' in result:
-            #    nModified = result['nModified']
             if nModified < 1:
                 return pprint.pformat(result) #json.dumps(result)
             return None

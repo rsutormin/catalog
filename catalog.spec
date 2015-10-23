@@ -77,6 +77,7 @@ module Catalog {
         with_disabled - optional flag indicating disabled repos should be included (default:false).
     */
     typedef structure {
+        list <string> owners;
         boolean include_released;
         boolean include_unreleased;
         boolean include_disabled;
@@ -181,4 +182,19 @@ module Catalog {
         given the timestamp returned from the register method, you can check the build log with this method
     */
     funcdef get_build_log(int timestamp) returns (string);
+
+
+
+    /* admin methods to turn on/off modules */
+    funcdef set_to_active(SelectOneModuleParams params) returns () authentication required;
+    funcdef set_to_inactive(SelectOneModuleParams params) returns () authentication required;
+
+    /* temporary developer approval, should be moved to more mature user profile service */
+    funcdef is_approved_developer(list<string>usernames) returns (list<boolean> is_approved);
+    funcdef list_approved_developers() returns (list<string> usernames);
+    funcdef approve_developer(string username) returns () authentication required;
+    funcdef revoke_developer(string username) returns () authentication required;
+
+
+
 };
