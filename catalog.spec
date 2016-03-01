@@ -450,4 +450,84 @@ module Catalog {
     /* returns true (1) if the user is an admin, false (0) otherwise */
     funcdef is_admin(string username) returns (boolean); 
 
+    /*
+        List all unit privileges recognized by the system (defined in server code).
+    */
+    funcdef get_all_privileges() returns (list<string>) authentication required;
+
+    typedef structure {
+        string name;
+        list<string> privileges;
+    } UserRole;
+
+    /*
+        Return set of roles registered with set_user_roles method. Roles are groups of
+            privileges and are defined dynamically through API by admins.
+    */
+    funcdef get_all_user_roles() returns (list<UserRole>) authentication required;
+
+    typedef structure {
+        list<UserRole> roles;
+    } SetUserRolesParams;
+
+    /*
+        Introduce (or override in case of existing role) set of roles.
+    */
+    funcdef set_user_roles(SetUserRolesParams params) returns () authentication required;
+
+    typedef structure {
+        list<string> roles;
+    } DeleteUserRolesParams;
+
+    /*
+        Remove role which is no longer needed (this role will be removed from all users
+            having it in privileges).
+    */
+    funcdef delete_user_roles(DeleteUserRolesParams params) returns () authentication required;
+
+    /*
+        users - list of interesting users, may include '*' user defining default roles.
+        list_every_user - optional flag available only for admins.
+    */
+    typedef structure {
+        list<string> users;
+        boolean list_every_user;
+    } GetUserPrivilegesParams;
+
+    typedef structure {
+        string user;
+        list<UserRole> roles;
+        list<string> privileges;
+    } UserPrivileges;
+
+    /*
+        List roles defined for each requested user (it's allowed to request info for '*' user 
+            meaning default settings).
+    */
+    funcdef get_user_privileges(GetUserPrivilegesParams params) returns (list<UserPrivileges>) authentication required;
+
+    typedef structure {
+        string user;
+        string privilege;
+    } CheckUserPrivilegeParams;
+
+    /*
+        For requested user method checks presence of requested privilege in any of role assigned to given user.
+    */
+    funcdef check_user_privilege(CheckUserPrivilegeParams params) returns (boolean);
+
+    /*
+        user - may be '*' defining default roles.
+        roles - new set of roles (for existing user this set overrides old set completely)
+    */
+    typedef structure {
+        string user;
+        list<string> roles;
+    } SetUserPrivilegesParams;
+
+    /*
+        Define (or override for existing user) roles of particular users. It's allowed to use '*' user for
+            defining default roles. Empty list of roles resets settings for given user.
+    */
+    funcdef set_user_privileges(SetUserPrivilegesParams params) returns () authentication required;
 };
