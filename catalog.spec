@@ -455,35 +455,38 @@ module Catalog {
     */
     funcdef get_all_privileges() returns (list<string>) authentication required;
 
+    /*
+        privs - list of privileges defined for given role. 
+    */
     typedef structure {
-        string name;
+        string role_name;
         list<string> privileges;
-    } UserRole;
+    } RoleInfo;
 
     /*
         Return set of roles registered with set_user_roles method. Roles are groups of
             privileges and are defined dynamically through API by admins.
     */
-    funcdef get_all_user_roles() returns (list<UserRole>) authentication required;
+    funcdef get_all_role_infos() returns (list<RoleInfo> role_info_list) authentication required;
 
     typedef structure {
-        list<UserRole> roles;
-    } SetUserRolesParams;
+        list<RoleInfo> role_infos;
+    } DefineRolesParams;
 
     /*
         Introduce (or override in case of existing role) set of roles.
     */
-    funcdef set_user_roles(SetUserRolesParams params) returns () authentication required;
+    funcdef define_roles(DefineRolesParams params) returns () authentication required;
 
     typedef structure {
-        list<string> roles;
-    } DeleteUserRolesParams;
+        list<string> role_names;
+    } DeleteRolesParams;
 
     /*
         Remove role which is no longer needed (this role will be removed from all users
             having it in privileges).
     */
-    funcdef delete_user_roles(DeleteUserRolesParams params) returns () authentication required;
+    funcdef delete_roles(DeleteRolesParams params) returns () authentication required;
 
     /*
         users - list of interesting users, may include '*' user defining default roles.
@@ -492,19 +495,19 @@ module Catalog {
     typedef structure {
         list<string> users;
         boolean list_every_user;
-    } GetUserPrivilegesParams;
+    } GetUserRolesParams;
 
     typedef structure {
         string user;
-        list<UserRole> roles;
+        list<string> role_names;
         list<string> privileges;
-    } UserPrivileges;
+    } UserRoles;
 
     /*
         List roles defined for each requested user (it's allowed to request info for '*' user 
             meaning default settings).
     */
-    funcdef get_user_privileges(GetUserPrivilegesParams params) returns (list<UserPrivileges>) authentication required;
+    funcdef get_user_roles(GetUserRolesParams params) returns (list<UserRoles> user_roles_list) authentication required;
 
     typedef structure {
         string user;
@@ -522,12 +525,12 @@ module Catalog {
     */
     typedef structure {
         string user;
-        list<string> roles;
-    } SetUserPrivilegesParams;
+        list<string> role_names;
+    } SetUserRolesParams;
 
     /*
         Define (or override for existing user) roles of particular users. It's allowed to use '*' user for
             defining default roles. Empty list of roles resets settings for given user.
     */
-    funcdef set_user_privileges(SetUserPrivilegesParams params) returns () authentication required;
+    funcdef set_user_roles(SetUserRolesParams params) returns () authentication required;
 };
