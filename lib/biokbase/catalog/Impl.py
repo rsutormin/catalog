@@ -470,3 +470,80 @@ class Catalog:
                              'returnVal is not type int as required.')
         # return the results
         return [returnVal]
+
+    def get_all_privileges(self, ctx):
+        # ctx is the context object
+        # return variables are: returnVal
+        #BEGIN get_all_privileges
+        returnVal = self.cc.get_all_privileges()
+        #END get_all_privileges
+
+        # At some point might do deeper type checking...
+        if not isinstance(returnVal, list):
+            raise ValueError('Method get_all_privileges return value ' +
+                             'returnVal is not type list as required.')
+        # return the results
+        return [returnVal]
+
+    def get_all_role_infos(self, ctx):
+        # ctx is the context object
+        # return variables are: role_info_list
+        #BEGIN get_all_role_infos
+        role_info_list = self.cc.get_all_role_infos()
+        #END get_all_role_infos
+
+        # At some point might do deeper type checking...
+        if not isinstance(role_info_list, list):
+            raise ValueError('Method get_all_role_infos return value ' +
+                             'role_info_list is not type list as required.')
+        # return the results
+        return [role_info_list]
+
+    def define_roles(self, ctx, params):
+        # ctx is the context object
+        #BEGIN define_roles
+        self.cc.define_roles(params)
+        #END define_roles
+        pass
+
+    def delete_roles(self, ctx, params):
+        # ctx is the context object
+        #BEGIN delete_roles
+        self.cc.delete_roles(params)
+        #END delete_roles
+        pass
+
+    def get_user_roles(self, ctx, params):
+        # ctx is the context object
+        # return variables are: user_roles_list
+        #BEGIN get_user_roles
+        user_roles_list = self.cc.get_user_roles(params)
+        #END get_user_roles
+
+        # At some point might do deeper type checking...
+        if not isinstance(user_roles_list, list):
+            raise ValueError('Method get_user_roles return value ' +
+                             'user_roles_list is not type list as required.')
+        # return the results
+        return [user_roles_list]
+
+    def check_user_privilege(self, ctx, params):
+        # ctx is the context object
+        # return variables are: returnVal
+        #BEGIN check_user_privilege
+        returnVal = self.cc.check_user_privilege(params)
+        #END check_user_privilege
+
+        # At some point might do deeper type checking...
+        if not isinstance(returnVal, int):
+            raise ValueError('Method check_user_privilege return value ' +
+                             'returnVal is not type int as required.')
+        # return the results
+        return [returnVal]
+
+    def set_user_roles(self, ctx, params):
+        # ctx is the context object
+        #BEGIN set_user_roles
+        self.cc.set_user_roles(params)
+        #END set_user_roles
+        pass

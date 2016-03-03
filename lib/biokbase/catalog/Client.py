@@ -401,4 +401,50 @@ class Catalog(object):
         resp = self._call('Catalog.is_admin',
                           [username], json_rpc_context)
         return resp[0]
+  
+    def get_all_privileges(self, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_all_privileges: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_all_privileges',
+                          [], json_rpc_context)
+        return resp[0]
+  
+    def get_all_role_infos(self, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_all_role_infos: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_all_role_infos',
+                          [], json_rpc_context)
+        return resp[0]
+  
+    def define_roles(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method define_roles: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.define_roles',
+                   [params], json_rpc_context)
+  
+    def delete_roles(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method delete_roles: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.delete_roles',
+                   [params], json_rpc_context)
+  
+    def get_user_roles(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method get_user_roles: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.get_user_roles',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def check_user_privilege(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method check_user_privilege: argument json_rpc_context is not type dict as required.')
+        resp = self._call('Catalog.check_user_privilege',
+                          [params], json_rpc_context)
+        return resp[0]
+  
+    def set_user_roles(self, params, json_rpc_context = None):
+        if json_rpc_context and type(json_rpc_context) is not dict:
+            raise ValueError('Method set_user_roles: argument json_rpc_context is not type dict as required.')
+        self._call('Catalog.set_user_roles',
+                   [params], json_rpc_context)
  

@@ -829,6 +829,32 @@ class CatalogController:
                 app_ids = None
         return self.db.list_client_groups(app_ids)
 
+    def get_all_privileges(self):
+        return ['view_stats']
+
+    def get_all_role_infos(self):
+        return self.db.get_all_role_infos()
+
+    def define_roles(self, params):
+        self.db.define_roles(params['role_infos'])
+
+    def delete_roles(self, params):
+        self.db.delete_roles(params['role_names'])
+
+    def get_user_roles(self, params):
+        users = None
+        if 'users' in params:
+            users = params['users']
+        list_every_user = False
+        if 'list_every_user' in params:
+            list_every_user = params['list_every_user']
+        return self.db.get_user_roles(users, list_every_user)
+
+    def check_user_privilege(self, params):
+        return self.db.check_user_privilege(params['user'], params['privilege'])
+
+    def set_user_roles(self, params):
+        self.db.set_user_roles(params['user'], params['role_names'])
 
 
 

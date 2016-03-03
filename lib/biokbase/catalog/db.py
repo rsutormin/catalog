@@ -92,6 +92,8 @@ class MongoCatalogDBI:
     _EXEC_STATS_RAW='exec_stats_raw'
     _EXEC_STATS_APPS='exec_stats_apps'
     _EXEC_STATS_USERS='exec_stats_users'
+    _ROLE_PRIVS='role_privs'
+    _USER_ROLES='user_roles'
 
     def __init__(self, mongo_host, mongo_db, mongo_user, mongo_psswd):
 
@@ -118,6 +120,8 @@ class MongoCatalogDBI:
         self.exec_stats_users.update({'avg_queue_time': {'$exists' : True}}, 
                                     {'$rename': {'avg_queue_time': 'total_queue_time',
                                                  'avg_exec_time': 'total_exec_time'}}, multi=True)
+        self.role_privs = self.db[MongoCatalogDBI._ROLE_PRIVS]
+        self.user_roles = self.db[MongoCatalogDBI._USER_ROLES]
 
         # Make sure we have an index on module and git_repo_url
         self.modules.ensure_index('module_name', unique=True, sparse=True)
@@ -179,6 +183,9 @@ class MongoCatalogDBI:
         # client group
         #  app_id = [lower case module name]/[app id]
         self.client_groups.ensure_index('app_id', unique=True, sparse=False)
+        
+        self.role_privs.ensure_index('role_name', unique=True)
+        self.user_roles.ensure_index('user', unique=True)
 
 
     def is_registered(self,module_name='',git_url=''):
@@ -771,4 +778,66 @@ class MongoCatalogDBI:
 
         return counts
 
-        
+    def get_all_role_infos(self):
+        return list(self.role_privs.find({}, {"_id": 0, "role_name": 1, "privileges": 1}))
+
+    def define_roles(self, role_infos):
+        ## Check if user is admin
+        for role_info in role_infos:
+            change = {"privileges": role_info["privileges"]}
+            self.role_privs.update({"role_name": role_info["role_name"]}, 
+                                   {"$set": change, "$setOnInsert": change}, upsert=True)
+
+    def delete_user_roles(self, role_names):
+        ## Check if user is admin
+        self.role_privs.remove({"role_name": {"$in": role_names}})
+        ## TODO: remove these roles from all user_roles
+        user_roles_list = list(self.user_roles.find({"role_names": {"$elemMatch": {"$in": role_names}}}))
+        roles_to_remove = set(role_names)
+        for user_roles in user_roles_list:
+            role_names = set(user_roles["role_names"]) - roles_to_remove
+            self.user_roles.update({"user": user_roles["user"]}, {"$set": {"role_names": list(role_names)}})
+
+    def set_user_roles(self, user, role_names):
+        change = {"role_names": role_names}
+        self.user_roles.update({"user": user}, 
+                               {"$set": change, "$setOnInsert": change}, upsert=True)
+
+    def get_user_privileges(self, users, list_every_user):
+        role2privs = {}
+        for role in self.get_all_user_roles():
+            role2privs[role["name"]] = role["privileges"]
+        user2roles = {}
+        filter = {}
+        if not list_every_user:
+            users_for_filter = users
+            users_for_filter.append("*")
+            filter = {"name": {"$in": users_for_filter}}
+        for user_roles in self.user_roles.find(filter, {"_id": 0, "user": 1, "roles": 1}):
+            user2roles[user_roles["user"]] = user_roles["roles"]
+        if list_every_user:
+            users = list(user2roles.keys())
+        ret = []
+        default_roles = set()
+        if "*" in user2roles:
+            default_roles = set(user2roles["*"])
+        for user in users:
+            user_privs = {"user": user}
+            roles = user2roles[user]
+            user_privs["roles"] = roles
+            if user != "*":
+                roles = list(set(roles) | default_roles)
+            privs = set()
+            for role in roles:
+                privs = privs | set(role2privs[role])
+            user_privs["privs"] = privs
+            ret.append(user_privs)
+        return ret
+
+    def check_user_privilege(self, user, privilege):
+        role_info_list = list(self.role_privs.find({"privileges": {"$elemMatch": privilege}}))
+        role_names = []
+        for role_info in role_info_list:
+            role_names.append(role_info["role_name"])
+        user_roles = self.user_roles.find_one({"user": user, "role_names": {"$elemMatch": role_names}})
+        return user_roles is not None

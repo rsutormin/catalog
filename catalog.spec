@@ -456,7 +456,7 @@ module Catalog {
     funcdef get_all_privileges() returns (list<string>) authentication required;
 
     /*
-        privs - list of privileges defined for given role. 
+        privileges - list of privileges defined for given role. 
     */
     typedef structure {
         string role_name;
@@ -497,6 +497,11 @@ module Catalog {
         boolean list_every_user;
     } GetUserRolesParams;
 
+    /*
+        role_names - list of roles defined for given user by set_user_roles (doesn't include
+            roles of default user).
+        privileges - combined privileges of roles defined for given user and for default user.
+    */
     typedef structure {
         string user;
         list<string> role_names;

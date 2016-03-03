@@ -166,6 +166,27 @@ sync_methods['Catalog.get_client_groups'] = True
 async_run_methods['Catalog.is_admin_async'] = ['Catalog', 'is_admin']
 async_check_methods['Catalog.is_admin_check'] = ['Catalog', 'is_admin']
 sync_methods['Catalog.is_admin'] = True
+async_run_methods['Catalog.get_all_privileges_async'] = ['Catalog', 'get_all_privileges']
+async_check_methods['Catalog.get_all_privileges_check'] = ['Catalog', 'get_all_privileges']
+sync_methods['Catalog.get_all_privileges'] = True
+async_run_methods['Catalog.get_all_role_infos_async'] = ['Catalog', 'get_all_role_infos']
+async_check_methods['Catalog.get_all_role_infos_check'] = ['Catalog', 'get_all_role_infos']
+sync_methods['Catalog.get_all_role_infos'] = True
+async_run_methods['Catalog.define_roles_async'] = ['Catalog', 'define_roles']
+async_check_methods['Catalog.define_roles_check'] = ['Catalog', 'define_roles']
+sync_methods['Catalog.define_roles'] = True
+async_run_methods['Catalog.delete_roles_async'] = ['Catalog', 'delete_roles']
+async_check_methods['Catalog.delete_roles_check'] = ['Catalog', 'delete_roles']
+sync_methods['Catalog.delete_roles'] = True
+async_run_methods['Catalog.get_user_roles_async'] = ['Catalog', 'get_user_roles']
+async_check_methods['Catalog.get_user_roles_check'] = ['Catalog', 'get_user_roles']
+sync_methods['Catalog.get_user_roles'] = True
+async_run_methods['Catalog.check_user_privilege_async'] = ['Catalog', 'check_user_privilege']
+async_check_methods['Catalog.check_user_privilege_check'] = ['Catalog', 'check_user_privilege']
+sync_methods['Catalog.check_user_privilege'] = True
+async_run_methods['Catalog.set_user_roles_async'] = ['Catalog', 'set_user_roles']
+async_check_methods['Catalog.set_user_roles_check'] = ['Catalog', 'set_user_roles']
+sync_methods['Catalog.set_user_roles'] = True
 
 class AsyncJobServiceClient(object):
 
@@ -577,6 +598,34 @@ class Application(object):
                              name='Catalog.is_admin',
                              types=[basestring])
         self.method_authentication['Catalog.is_admin'] = 'none'
+        self.rpc_service.add(impl_Catalog.get_all_privileges,
+                             name='Catalog.get_all_privileges',
+                             types=[])
+        self.method_authentication['Catalog.get_all_privileges'] = 'required'
+        self.rpc_service.add(impl_Catalog.get_all_role_infos,
+                             name='Catalog.get_all_role_infos',
+                             types=[])
+        self.method_authentication['Catalog.get_all_role_infos'] = 'required'
+        self.rpc_service.add(impl_Catalog.define_roles,
+                             name='Catalog.define_roles',
+                             types=[dict])
+        self.method_authentication['Catalog.define_roles'] = 'required'
+        self.rpc_service.add(impl_Catalog.delete_roles,
+                             name='Catalog.delete_roles',
+                             types=[dict])
+        self.method_authentication['Catalog.delete_roles'] = 'required'
+        self.rpc_service.add(impl_Catalog.get_user_roles,
+                             name='Catalog.get_user_roles',
+                             types=[dict])
+        self.method_authentication['Catalog.get_user_roles'] = 'required'
+        self.rpc_service.add(impl_Catalog.check_user_privilege,
+                             name='Catalog.check_user_privilege',
+                             types=[dict])
+        self.method_authentication['Catalog.check_user_privilege'] = 'none'
+        self.rpc_service.add(impl_Catalog.set_user_roles,
+                             name='Catalog.set_user_roles',
+                             types=[dict])
+        self.method_authentication['Catalog.set_user_roles'] = 'required'
         self.auth_client = biokbase.nexus.Client(
             config={'server': 'nexus.api.globusonline.org',
                     'verify_ssl': True,
